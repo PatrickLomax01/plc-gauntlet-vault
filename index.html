@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>PLC Gauntlet – Unlock the Vault</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    :root {
+      --bg: #020617;
+      --bg-alt: #030712;
+      --card: #0b1120;
+      --accent: #facc15;
+      --accent-soft: rgba(250, 204, 21, 0.12);
+      --text-main: #f9fafb;
+      --text-muted: #9ca3af;
+      --border: #1f2937;
+      --danger: #f97373;
+      --success: #4ade80;
+      --focus: #60a5fa;
+      --radius: 14px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        sans-serif;
+      background:
+        radial-gradient(circle at top, #111827 0, #020617 45%, #000 100%);
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .app {
+      position: relative;
+      width: 100%;
+      max-width: 860px;
+      border-radius: 24px;
+      padding: 22px 20px 26px;
+      background: linear-gradient(145deg, #020617, #030712);
+      border: 1px solid rgba(148, 163, 184, 0.3);
+      box-shadow:
+        0 24px 70px rgba(15, 23, 42, 0.9),
+        0 0 0 1px rgba(15, 23, 42, 0.5);
+      overflow: hidden;
+    }
+
+    .glow {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 0% 0%, rgba(56, 189, 248, 0.18), transparent 55%),
+        radial-gradient(circle at 100% 0%, rgba(250, 204, 21, 0.22), transparent 52%);
+      mix-blend-mode: screen;
+      pointer-events: none;
+      opacity: 0.9;
+    }
+
+    header {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 14px;
+    }
+
+    .title-block h1 {
+      margin: 0 0 4px;
+      font-size: 1.3rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .vault-icon {
+      width: 26px;
+      height: 26px;
+      border-radius: 999px;
+      border: 1px solid rgba(250, 204, 21, 0.7);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.86rem;
+      background: radial-gradient(circle at 30% 0, #facc15, #854d0e);
+      color: #111827;
+      box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.9);
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 10px 3px;
+      border-radius: 999px;
+      border: 1px solid rgba(250, 204, 21, 0.75);
+      background: rgba(15, 23, 42, 0.92);
+      color: var(--accent);
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+    }
+
+    .subtitle {
+      margin: 0;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .status {
+      text-align: right;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .status span {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.7);
+      background: rgba(15, 23, 42, 0.9);
+    }
+
+    .status .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: #f97316;
+      box-shadow: 0 0 6px rgba(248, 113, 113, 0.8);
+    }
+
+    main {
+      position: relative;
+      z-index: 1;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.95fr);
+      gap: 14px;
+    }
+
+    .locks {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 10px;
+    }
+
+    .lock-card {
+      background: radial-gradient(circle at top, #020617, #020617 45%, #000 100%);
+      border-radius: 16px;
+      padding: 12px 12px 13px;
+      border: 1px solid rgba(55, 65, 81, 0.95);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .lock-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      border: 1px solid transparent;
+      background: linear-gradient(
+        120deg,
+        rgba(248, 250, 252, 0.16),
+        transparent 60%
+      );
+      mask:
+        linear-gradient(#000 0 0) padding-box,
+        linear-gradient(#000 0 0);
+      mask-composite: exclude;
+      opacity: 0.35;
+      pointer-events: none;
+    }
+
+    .lock-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+
+    .lock-name {
+      font-size: 0.9rem;
+      font-weight: 600;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+    }
+
+    .lock-tag {
+      font-size: 0.7rem;
+      padding: 2px 8px 3px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.75);
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+    }
+
+    .lock-body {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .lock-number {
+      font-size: 0.7rem;
+      color: rgba(148, 163, 184, 0.9);
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      margin-bottom: 6px;
+    }
+
+    .lock-input-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+
+    input[type="text"] {
+      flex: 1;
+      padding: 7px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(55, 65, 81, 0.95);
+      background: rgba(15, 23, 42, 0.95);
+      color: var(--text-main);
+      font-size: 0.88rem;
+      outline: none;
+      transition: border 0.14s ease, box-shadow 0.14s ease, background 0.14s ease;
+    }
+
+    input[type="text"]:focus {
+      border-color: var(--focus);
+      box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.7);
+      background: rgba(15, 23, 42, 1);
+    }
+
+    button {
+      border: none;
+      border-radius: 999px;
+      padding: 7px 12px;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.13em;
+      cursor: pointer;
+      background: radial-gradient(circle at top, #facc15, #eab308);
+      color: #111827;
+      font-weight: 600;
+      box-shadow: 0 8px 22px rgba(250, 204, 21, 0.55);
+      white-space: nowrap;
+      transition:
+        transform 0.12s ease,
+        box-shadow 0.12s ease,
+        filter 0.12s ease;
+    }
+
+    button:hover {
+      filter: brightness(1.05);
+      transform: translateY(-1px);
+      box-shadow: 0 12px 28px rgba(250, 204, 21, 0.75);
+    }
+
+    button:active {
+      transform: translateY(1px) scale(0.98);
+      box-shadow: 0 4px 14px rgba(250, 204, 21, 0.7);
+    }
+
+    button:disabled {
+      opacity: 0.65;
+      cursor: default;
+      box-shadow: none;
+      transform: none;
+      filter: none;
+    }
+
+    .lock-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.74rem;
+      color: var(--text-muted);
+    }
+
+    .badge {
+      border-radius: 999px;
+      padding: 2px 8px 3px;
+      border: 1px solid rgba(148, 163, 184, 0.75);
+    }
+
+    .badge.good {
+      border-color: rgba(34, 197, 94, 0.75);
+      color: var(--success);
+    }
+
+    .badge.bad {
+      border-color: rgba(248, 113, 113, 0.85);
+      color: var(--danger);
+    }
+
+    .hint {
+      font-size: 0.7rem;
+    }
+
+    .side-panel {
+      background: radial-gradient(circle at top, #020617, #020617 55%, #000 100%);
+      border-radius: 16px;
+      padding: 12px 13px 14px;
+      border: 1px solid rgba(55, 65, 81, 0.95);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 190px;
+    }
+
+    .progress-label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .progress-bar {
+      position: relative;
+      height: 7px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.95);
+      overflow: hidden;
+      margin-bottom: 10px;
+    }
+
+    .progress-inner {
+      position: absolute;
+      inset: 0;
+      transform-origin: left center;
+      background: linear-gradient(90deg, #22c55e, #facc15);
+      transform: scaleX(0);
+      transition: transform 0.22s ease-out;
+    }
+
+    .final-message {
+      font-size: 0.83rem;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .final-message strong {
+      color: var(--accent);
+    }
+
+    .final-phrase {
+      margin-top: 4px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--success);
+      display: none;
+    }
+
+    .room-list {
+      margin-top: 6px;
+      font-size: 0.74rem;
+      color: var(--text-muted);
+    }
+
+    .room-list div {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 2px;
+    }
+
+    .room-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 999px;
+      background: rgba(148, 163, 184, 0.55);
+    }
+
+    .room-dot.done {
+      background: #22c55e;
+    }
+
+    .room-dot.current {
+      background: #facc15;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      background: rgba(15, 23, 42, 0.96);
+      border: 1px solid rgba(148, 163, 184, 0.6);
+      display: none;
+      align-items: center;
+      gap: 6px;
+      z-index: 40;
+    }
+
+    .toast.show {
+      display: inline-flex;
+      animation: toast-in 0.18s ease-out;
+    }
+
+    .toast.success {
+      border-color: rgba(34, 197, 94, 0.75);
+      color: var(--success);
+    }
+
+    .toast.error {
+      border-color: rgba(248, 113, 113, 0.9);
+      color: var(--danger);
+    }
+
+    @keyframes toast-in {
+      from {
+        opacity: 0;
+        transform: translate(-50%, 8px);
+      }
+      to {
+        opacity: 1;
+        transform: translate(-50%, 0);
+      }
+    }
+
+    .confetti {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      display: none;
+      z-index: 30;
+    }
+
+    .confetti-piece {
+      position: absolute;
+      width: 6px;
+      height: 16px;
+      border-radius: 3px;
+      background: #facc15;
+      opacity: 0.9;
+      animation: confetti-fall 1.4s linear forwards;
+    }
+
+    @keyframes confetti-fall {
+      to {
+        transform: translateY(120vh) rotate(280deg);
+        opacity: 0;
+      }
+    }
+
+    @media (max-width: 780px) {
+      .layout {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .app {
+        padding: 18px 14px 22px;
+      }
+
+      .title-block h1 {
+        font-size: 1.1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="glow"></div>
+    <header>
+      <div class="title-block">
+        <h1>
+          <span class="vault-icon">🔐</span>
+          PLC GAUNTLET
+        </h1>
+        <div class="chip">Unlock the Vault • Staff PLC Challenge</div>
+        <p class="subtitle">
+          Enter the correct code for each room. When all six rooms are unlocked, the vault will reveal your final phrase.
+        </p>
+      </div>
+      <div class="status">
+        <span>
+          <span class="dot"></span>
+          Live Session • Term 1 PLC Launch
+        </span>
+      </div>
+    </header>
+
+    <main>
+      <div class="layout">
+        <div class="locks" id="locks"></div>
+
+        <aside class="side-panel">
+          <div>
+            <div class="progress-label">
+              <span>Vault Progress</span>
+              <span id="progress-label">0 / 6 unlocked</span>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-inner" id="progress-inner"></div>
+            </div>
+            <p class="final-message" id="final-message">
+              When all six rooms are green, the <strong>Vault Phrase</strong> will appear here. One team to rule the leaderboard.
+            </p>
+            <div class="final-phrase" id="final-phrase"></div>
+          </div>
+
+          <div class="room-list" id="room-list">
+            <!-- dynamically filled -->
+          </div>
+        </aside>
+      </div>
+    </main>
+  </div>
+
+  <div class="toast" id="toast"></div>
+  <div class="confetti" id="confetti"></div>
+
+  <script>
+    // === CONFIGURATION ===
+    const locks = [
+      {
+        id: "room1",
+        name: "Room 1 – Purpose Room",
+        tag: "PLC Purpose",
+        description: "Sort the real PLC statements from the fakes. Take the letters from the true statements to reveal this code word.",
+        answer: "EVIDENCE",
+        type: "word"
+      },
+      {
+        id: "room2",
+        name: "Room 2 – Norms Arena",
+        tag: "PLC Norms",
+        description: "Match the behaviours to our norms and read the highlighted letters in order.",
+        answer: "ACTION",
+        type: "word"
+      },
+      {
+        id: "room3",
+        name: "Room 3 – Impact Chamber",
+        tag: "Impact Cycle",
+        description: "Sequence Identify → Learn → Improve and label the three scenarios correctly.",
+        answer: "264",
+        type: "code"
+      },
+      {
+        id: "room4",
+        name: "Room 4 – IR Lab",
+        tag: "Instructional Rounds",
+        description: "Keep only low-inference notes, sort them into lesson phases, and unscramble the word.",
+        answer: "BASELINE",
+        type: "word"
+      },
+      {
+        id: "room5",
+        name: "Room 5 – Roles Arena",
+        tag: "ELT • Coordinators • Leaders",
+        description: "Rebuild the leadership web by assigning responsibilities to each role.",
+        answer: "LEAD",
+        type: "word"
+      },
+      {
+        id: "room6",
+        name: "Room 6 – Term 1 Operations Vault",
+        tag: "T1 PLC Sequence",
+        description: "Rebuild the Term 1 PLC calendar and use the cipher to reveal the final room code.",
+        answer: "REFINE",
+        type: "word"
+      }
+    ];
+
+    const VAULT_PHRASE = "COLLECTIVE EFFICACY UNLOCKED";
+
+    // === DOM ELEMENTS ===
+    const locksContainer = document.getElementById("locks");
+    const progressInner = document.getElementById("progress-inner");
+    const progressLabel = document.getElementById("progress-label");
+    const finalMessage = document.getElementById("final-message");
+    const finalPhraseEl = document.getElementById("final-phrase");
+    const roomList = document.getElementById("room-list");
+    const toast = document.getElementById("toast");
+    const confetti = document.getElementById("confetti");
+
+    const state = {
+      solved: new Set()
+    };
+
+    function normalise(value) {
+      return value.trim().toUpperCase();
+    }
+
+    function renderLocks() {
+      locksContainer.innerHTML = "";
+      roomList.innerHTML = "";
+
+      locks.forEach((lock, index) => {
+        const card = document.createElement("div");
+        card.className = "lock-card";
+        card.dataset.lockId = lock.id;
+
+        const header = document.createElement("div");
+        header.className = "lock-header";
+
+        const name = document.createElement("div");
+        name.className = "lock-name";
+        name.textContent = lock.name;
+
+        const tag = document.createElement("div");
+        tag.className = "lock-tag";
+        tag.textContent = lock.tag;
+
+        header.appendChild(name);
+        header.appendChild(tag);
+
+        const body = document.createElement("div");
+        body.className = "lock-body";
+        body.textContent = lock.description;
+
+        const number = document.createElement("div");
+        number.className = "lock-number";
+        number.textContent = `Code ${index + 1}`;
+
+        const row = document.createElement("div");
+        row.className = "lock-input-row";
+
+        const input = document.createElement("input");
+        input.type = "text";
+        input.placeholder = lock.type === "code" ? "e.g. 264" : "Enter code word…";
+        input.autocomplete = "off";
+        input.dataset.lockId = lock.id;
+
+        const button = document.createElement("button");
+        button.textContent = "Check";
+        button.dataset.lockId = lock.id;
+
+        row.appendChild(input);
+        row.appendChild(button);
+
+        const footer = document.createElement("div");
+        footer.className = "lock-footer";
+
+        const statusBadge = document.createElement("span");
+        statusBadge.className = "badge";
+        statusBadge.id = `badge-${lock.id}`;
+        statusBadge.textContent = "Locked";
+
+        const hint = document.createElement("span");
+        hint.className = "hint";
+        hint.textContent =
+          lock.type === "code" ? "Hint: numeric code." : "Hint: single word, no spaces.";
+
+        footer.appendChild(statusBadge);
+        footer.appendChild(hint);
+
+        card.appendChild(header);
+        card.appendChild(body);
+        card.appendChild(number);
+        card.appendChild(row);
+        card.appendChild(footer);
+
+        locksContainer.appendChild(card);
+
+        button.addEventListener("click", () => {
+          handleCheck(lock.id);
+        });
+
+        input.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") {
+            handleCheck(lock.id);
+          }
+        });
+
+        // side-panel list
+        const roomRow = document.createElement("div");
+        const dot = document.createElement("span");
+        dot.className = "room-dot";
+        dot.id = `dot-${lock.id}`;
+        const label = document.createElement("span");
+        label.textContent = lock.name.replace("Room ", "R");
+        roomRow.appendChild(dot);
+        roomRow.appendChild(label);
+        roomList.appendChild(roomRow);
+      });
+
+      updateProgress();
+    }
+
+    function handleCheck(lockId) {
+      const lock = locks.find((l) => l.id === lockId);
+      if (!lock) return;
+
+      const input = document.querySelector(`input[data-lock-id="${lockId}"]`);
+      const button = document.querySelector(`button[data-lock-id="${lockId}"]`);
+      const badge = document.getElementById(`badge-${lockId}`);
+      const dot = document.getElementById(`dot-${lockId}`);
+
+      if (!input || !button || !badge || !dot) return;
+
+      if (state.solved.has(lockId)) {
+        showToast("Already unlocked.", "success");
+        return;
+      }
+
+      const value = normalise(input.value);
+      if (!value) {
+        showToast("Enter a code before checking.", "error");
+        return;
+      }
+
+      if (value === normalise(lock.answer)) {
+        state.solved.add(lockId);
+        badge.className = "badge good";
+        badge.textContent = "Unlocked";
+        input.disabled = true;
+        button.disabled = true;
+        dot.classList.remove("current");
+        dot.classList.add("done");
+        showToast(`${lock.name} unlocked!`, "success");
+        updateProgress();
+      } else {
+        badge.className = "badge bad";
+        badge.textContent = "Try again";
+        dot.classList.add("current");
+        showToast("Incorrect code – confer with your team and check the puzzle again.", "error");
+      }
+    }
+
+    function updateProgress() {
+      const total = locks.length;
+      const solved = state.solved.size;
+      const ratio = solved / total;
+      progressInner.style.transform = `scaleX(${ratio})`;
+      progressLabel.textContent = `${solved} / ${total} unlocked`;
+
+      // update dots: first unsolved becomes "current"
+      locks.forEach((lock) => {
+        const dot = document.getElementById(`dot-${lock.id}`);
+        if (!dot) return;
+        dot.classList.remove("current");
+        if (!state.solved.has(lock.id) && solved !== total && !document.querySelector(".room-dot.current")) {
+          dot.classList.add("current");
+        }
+      });
+
+      if (solved === total) {
+        unlockVault();
+      }
+    }
+
+    function unlockVault() {
+      finalMessage.textContent =
+        "Vault unlocked! Share the phrase with the PL coordinator or enter it on the leaderboard slide.";
+      finalPhraseEl.textContent = VAULT_PHRASE;
+      finalPhraseEl.style.display = "block";
+      triggerConfetti();
+      showToast("Vault unlocked – congratulations!", "success");
+    }
+
+    function showToast(message, type) {
+      toast.textContent = message;
+      toast.className = "toast show " + (type === "success" ? "success" : "error");
+      clearTimeout(showToast._timeout);
+      showToast._timeout = setTimeout(() => {
+        toast.classList.remove("show");
+      }, 1700);
+    }
+
+    function triggerConfetti() {
+      confetti.innerHTML = "";
+      confetti.style.display = "block";
+      const pieces = 80;
+      for (let i = 0; i < pieces; i++) {
+        const piece = document.createElement("div");
+        piece.className = "confetti-piece";
+        const x = Math.random() * 100;
+        const delay = Math.random() * 0.4;
+        const scale = 0.7 + Math.random() * 0.6;
+        piece.style.left = x + "vw";
+        piece.style.transform = `translateY(-10vh) scale(${scale})`;
+        piece.style.animationDelay = delay + "s";
+        confetti.appendChild(piece);
+      }
+      setTimeout(() => {
+        confetti.style.display = "none";
+      }, 1700);
+    }
+
+    // Initialise
+    renderLocks();
+  </script>
+</body>
+</html>
