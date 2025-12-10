@@ -7,7 +7,7 @@ Staff work in teams to solve six "rooms" based on the PLC model:
 
 1. PLC Purpose – **EVIDENCE**
 2. PLC Norms – **ACTION**
-3. Impact Cycle – **264**
+3. Impact Cycle – **274**
 4. Instructional Rounds – **BASELINE**
 5. Roles (ELT, Coordinators, PLC Leaders) – **LEAD**
 6. Term 1 PLC Sequence – **REFINE**
